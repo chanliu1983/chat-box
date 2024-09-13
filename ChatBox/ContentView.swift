@@ -112,22 +112,22 @@ struct ContentView: View {
                 stopConnection()
             }
             
-            Button("Decompression Test") {
-                let testString = "Testbed1"
-                let testData = testString.data(using: .utf8)!
-                let compressedData = testData.compress(withAlgorithm: COMPRESSION_LZ4_RAW)
-
-                // print out number for each byte in the compressed data seperated by ","
-                print("Compressed data:")
-                for byte in compressedData! {
-                    print(String(byte, radix: 10, uppercase: false), terminator: ",")
+            Button("Storm") {
+                DispatchQueue.global(qos: .background).async {
+                    for i in 0..<100 {
+                        let payloadData: [String: Any] = [
+                            "message": "Storm \(i)",
+                            "action": "send",
+                            "timestamp": "\(Date())",
+                            "target": "Conduit 1"
+                        ]
+                        let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                        sendAsCStructure(connection: self.connection!, textData: payload)
+                        Thread.sleep(forTimeInterval: 1) // Sleep for 1 second
+                    }
                 }
-                print("\n")
-
-                let decompressedData = compressedData!.decompress(withAlgorithm: COMPRESSION_LZ4_RAW)
-                let decompressedString = String(data: decompressedData!, encoding: .utf8)
-                print("Decompressed string: \(decompressedString!)")
             }
+            
         }
         .padding()
         .onDisappear {
@@ -143,7 +143,7 @@ struct ContentView: View {
                 if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                     if let source = json["source"] as? Int64, let message = json["message"] as? String, let timestamp = json["timestamp"] as? String {
                         let parsedMessage = "\(source): \(message) at (\(timestamp))"
-                        messages.append(parsedMessage)
+                        messages.insert(parsedMessage, at: 0)
 
                         // Continue to receive more data
                         startReceiving(connection: connection)
@@ -154,7 +154,8 @@ struct ContentView: View {
     }
 
     func startConnection() {
-        let ip4 = IPv4Address("192.168.10.106")!
+        let ip4 = IPv4Address("192.168.10.106")! // Linux
+        // let ip4 = IPv4Address("192.168.10.64")! // Mac
         let host = NWEndpoint.Host.ipv4(ip4)
         let port = NWEndpoint.Port(rawValue: 16666)
 
