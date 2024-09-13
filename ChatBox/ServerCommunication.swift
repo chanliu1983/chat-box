@@ -11,13 +11,8 @@ class ServerCommunicator: ObservableObject {
 
     init() {}
 
-    func startConnection(host: String, port: UInt16, serverType: String, completion: @escaping (Bool) -> Void) {
-        let ip4: IPv4Address
-        if serverType == "Linux" {
-            ip4 = IPv4Address(host)!
-        } else {
-            ip4 = IPv4Address(host)!
-        }
+    func startConnection(host: String, port: UInt16, completion: @escaping (Bool) -> Void) {
+        let ip4 = IPv4Address(host)!
 
         let host = NWEndpoint.Host.ipv4(ip4)
         let port = NWEndpoint.Port(rawValue: port)

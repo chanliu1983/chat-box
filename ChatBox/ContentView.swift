@@ -158,7 +158,7 @@ struct ContentView: View {
         }
 
         let host = serverType == "Linux" ? "192.168.10.106" : "192.168.10.64"
-        serverCommunicator.startConnection(host: host, port: 16666, serverType: serverType) { success in
+        serverCommunicator.startConnection(host: host, port: 16666) { success in
             if success {
                 print("Connected to server")
 
