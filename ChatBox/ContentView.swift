@@ -69,6 +69,9 @@ struct ContentView: View {
     @State private var serverType: String = "Linux"
     @State private var isSingleRetrievalEnabled: Bool = false
     @State private var isStormOngoing: Bool = false
+    @State private var isInConduit1: Bool = true
+    @State private var isInConduit2: Bool = false
+    @State private var isInConduit3: Bool = false
 
     var body: some View {
         Picker("Platform", selection: $serverType) {
@@ -96,6 +99,21 @@ struct ContentView: View {
                 Button("Disconnect") {
                     stopConnection()
                 }
+
+                HStack {
+                    Toggle("Conduit 1", isOn: $isInConduit1)
+                        .onChange(of: isInConduit1) { _ in
+                            joinConduit()
+                        }
+                    Toggle("Conduit 2", isOn: $isInConduit2)
+                        .onChange(of: isInConduit2) { _ in
+                            joinConduit()
+                        }
+                    Toggle("Conduit 3", isOn: $isInConduit3)
+                        .onChange(of: isInConduit3) { _ in
+                            joinConduit()
+                        }
+                }
             }
             
             TextField(
@@ -105,14 +123,15 @@ struct ContentView: View {
             
             HStack {
                 Button("Send") {
-                    let payloadData: [String: Any] = [
-                        "message": message,
-                        "action": "send",
-                        "timestamp": "\(Date())",
-                        "target": "Conduit 1"
-                    ]
-                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                    sendAsCStructure(connection: self.connection!, textData: payload)
+                    if isInConduit1 {
+                        sendToConduit(conduit: "Conduit 1")
+                    }
+                    if isInConduit2 {
+                        sendToConduit(conduit: "Conduit 2")
+                    }
+                    if isInConduit3 {
+                        sendToConduit(conduit: "Conduit 3")
+                    }
                 }
                 
                 Button("Storm") {
@@ -126,14 +145,15 @@ struct ContentView: View {
                         self.isStormOngoing = true
                         
                         for i in 0..<100 {
-                            let payloadData: [String: Any] = [
-                                "message": "Storm \(i) : \(message)",
-                                "action": "send",
-                                "timestamp": "\(Date())",
-                                "target": "Conduit 1"
-                            ]
-                            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                            sendAsCStructure(connection: self.connection!, textData: payload)
+                            if self.isInConduit1 {
+                                self.stormConduit(conduit: "Conduit 1", message: self.message, count: i)
+                            }
+                            if self.isInConduit2 {
+                                self.stormConduit(conduit: "Conduit 2", message: self.message, count: i)
+                            }
+                            if self.isInConduit3 {
+                                self.stormConduit(conduit: "Conduit 3", message: self.message, count: i)
+                            }
                             Thread.sleep(forTimeInterval: 1) // Sleep for 1 second
                         }
                         
@@ -147,28 +167,27 @@ struct ContentView: View {
             HStack {
                 TextField("Key", text: $key)
                 Button("store") {
-                    let payloadData: [String: Any] = [
-                        "message": message,
-                        "action": "store",
-                        "timestamp": "\(Date())",
-                        "target": "Conduit 1",
-                        "key": key
-                    ]
-                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                    sendAsCStructure(connection: self.connection!, textData: payload)
+                    if isInConduit1 {
+                        storeConduit(conduit: "Conduit 1", message: message, key: key)
+                    }
+                    if isInConduit2 {
+                        storeConduit(conduit: "Conduit 2", message: message, key: key)
+                    }
+                    if isInConduit3 {
+                        storeConduit(conduit: "Conduit 3", message: message, key: key)
+                    }
                 }
                 
                 Button("retrieve") {
-                    let payloadData: [String: Any] = [
-                        "message": "",
-                        "action": "retrieve",
-                        "timestamp": "\(Date())",
-                        "target": "Conduit 1",
-                        "key": key,
-                        "single": isSingleRetrievalEnabled
-                    ]
-                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                    sendAsCStructure(connection: self.connection!, textData: payload)
+                    if isInConduit1 {
+                        retrieveConduit(conduit: "Conduit 1", key: key, single: isSingleRetrievalEnabled)
+                    }
+                    if isInConduit2 {
+                        retrieveConduit(conduit: "Conduit 2", key: key, single: isSingleRetrievalEnabled)
+                    }
+                    if isInConduit3 {
+                        retrieveConduit(conduit: "Conduit 3", key: key, single: isSingleRetrievalEnabled)
+                    }
                 }
                 
                 Toggle("Enable Single Retrieval", isOn: $isSingleRetrievalEnabled)
@@ -263,10 +282,101 @@ struct ContentView: View {
     }
 
     func joinConduit() {
+        if isInConduit1 {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 1",
+                "action": "connect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        } else {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 1",
+                "action": "disconnect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        }
+        if isInConduit2 {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 2",
+                "action": "connect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        } else {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 2",
+                "action": "disconnect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        }
+        if isInConduit3 {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 3",
+                "action": "connect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        } else {
+            let payloadData: [String: Any] = [
+                "message": "Conduit 3",
+                "action": "disconnect",
+                "timestamp": "\(Date())"
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+        }
+    }
+    
+    func sendToConduit(conduit: String) {
         let payloadData: [String: Any] = [
-            "message": "Conduit 1",
-            "action": "connect",
-            "timestamp": "\(Date())"
+            "message": message,
+            "action": "send",
+            "timestamp": "\(Date())",
+            "target": conduit
+        ]
+        let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+        sendAsCStructure(connection: self.connection!, textData: payload)
+    }
+
+    func stormConduit(conduit: String, message: String, count: Int) {
+        let payloadData: [String: Any] = [
+                "message": "Storm \(count) : \(message)",
+                "action": "send",
+                "timestamp": "\(Date())",
+                "target": conduit
+            ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
+    }
+
+    func storeConduit(conduit: String, message: String, key: String) {
+        let payloadData: [String: Any] = [
+            "message": message,
+            "action": "store",
+            "timestamp": "\(Date())",
+            "target": conduit,
+            "key": key
+        ]
+        let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+        sendAsCStructure(connection: self.connection!, textData: payload)
+    }
+
+    func retrieveConduit(conduit: String, key: String, single: Bool) {
+        let payloadData: [String: Any] = [
+            "message": "",
+            "action": "retrieve",
+            "timestamp": "\(Date())",
+            "target": conduit,
+            "key": key,
+            "single": single
         ]
         let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
         sendAsCStructure(connection: self.connection!, textData: payload)
