@@ -32,36 +32,37 @@ extension Data {
     }
     
     func decompress(withAlgorithm algorithm: compression_algorithm) -> Data? {
-            let bufferSize = 64 * 1024  // 64 KB buffer size
-            var decompressedData = Data()
+        let bufferSize = 64 * 1024  // 64 KB buffer size
+        var decompressedData = Data()
 
-            self.withUnsafeBytes { (sourcePointer: UnsafeRawBufferPointer) in
-                let sourceBuffer = sourcePointer.bindMemory(to: UInt8.self).baseAddress!
-                let sourceSize = self.count
-                
-                var destinationBuffer = [UInt8](repeating: 0, count: bufferSize)
-                
-                let decompressedSize = compression_decode_buffer(
-                    &destinationBuffer,
-                    bufferSize,
-                    sourceBuffer,
-                    sourceSize,
-                    nil,
-                    algorithm
-                )
-                
-                if decompressedSize > 0 {
-                    decompressedData.append(destinationBuffer, count: decompressedSize)
-                }
-            }
+        self.withUnsafeBytes { (sourcePointer: UnsafeRawBufferPointer) in
+            let sourceBuffer = sourcePointer.bindMemory(to: UInt8.self).baseAddress!
+            let sourceSize = self.count
             
-            return decompressedData
+            var destinationBuffer = [UInt8](repeating: 0, count: bufferSize)
+            
+            let decompressedSize = compression_decode_buffer(
+                &destinationBuffer,
+                bufferSize,
+                sourceBuffer,
+                sourceSize,
+                nil,
+                algorithm
+            )
+            
+            if decompressedSize > 0 {
+                decompressedData.append(destinationBuffer, count: decompressedSize)
+            }
         }
+        
+        return decompressedData
+    }
 }
 
 struct ContentView: View {
     @State private var connection: NWConnection? = nil
     @State private var isConnected: Bool = false
+    @State private var isConnecting: Bool = false
     @State private var message: String = "Test Message Sent!!!"
     @State private var messages: [String] = []
     @State private var key: String = "TestbedKey1"
@@ -80,21 +81,15 @@ struct ContentView: View {
             
             HStack {
                 Button("Connect") {
-                    if self.isConnected {
-                        // do nothing if already connected
+                    if self.isConnected || self.isConnecting {
+                        // do nothing if already connected or connecting
                         return
                     }
 
+                    self.isConnecting = true
                     startConnection()
-
-                    let payloadData: [String: Any] = [
-                        "message": "Conduit 1",
-                        "action": "connect",
-                        "timestamp": "\(Date())"
-                    ]
-                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                    sendAsCStructure(connection: self.connection!, textData: payload)
                 }
+                .disabled(self.isConnected || self.isConnecting)
                 
                 Button("Disconnect") {
                     stopConnection()
@@ -176,14 +171,6 @@ struct ContentView: View {
         }
         .onAppear {
             startConnection() // Start the connection when the view appears
-
-            let payloadData: [String: Any] = [
-                        "message": "Conduit 1",
-                        "action": "connect",
-                        "timestamp": "\(Date())"
-                    ]
-            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-            sendAsCStructure(connection: self.connection!, textData: payload)
         }
     }
     
@@ -218,33 +205,55 @@ struct ContentView: View {
         let host = NWEndpoint.Host.ipv4(ip4)
         let port = NWEndpoint.Port(rawValue: 16666)
 
-        if let port = port {
-            connection = NWConnection(host: host, port: port, using: .tcp)
+        if connection == nil {
+            connection = NWConnection(host: host, port: port!, using: .tcp)
+        } else {
+            // close and deallocate the previous connection
+            connection?.cancel()
+            connection = nil
+            
+            connection = NWConnection(host: host, port: port!, using: .tcp)
+        }
 
+        if let connection = connection {
             // Use [weak self] to capture self as a weak reference and avoid immutability issues
-            connection?.stateUpdateHandler = { [self] newState in
-                DispatchQueue.main.async {
-                    switch newState {
-                    case .ready:
-                        self.isConnected = true
-                        DispatchQueue.global(qos: .background).async {
-                            startReceiving(connection: connection!)
-                        }
-                    case .failed(_), .cancelled:
-                        self.isConnected = false
-                    default:
-                        break
-                    }
+            connection.stateUpdateHandler = { [self] newState in
+            DispatchQueue.main.async {
+                switch newState {
+                case .ready:
+                self.isConnected = true
+                self.isConnecting = false
+                self.joinConduit()
+                DispatchQueue.global(qos: .background).async {
+                    self.startReceiving(connection: connection)
+                }
+                case .failed(_), .cancelled:
+                self.isConnected = false
+                self.isConnecting = false
+                default:
+                break
                 }
             }
+            }
             
-            connection?.start(queue: .global())
+            connection.start(queue: .global())
         }
     }
 
     func stopConnection() {
         connection?.cancel()
         isConnected = false
+        isConnecting = false
+    }
+
+    func joinConduit() {
+        let payloadData: [String: Any] = [
+            "message": "Conduit 1",
+            "action": "connect",
+            "timestamp": "\(Date())"
+        ]
+        let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+        sendAsCStructure(connection: self.connection!, textData: payload)
     }
 }
 
