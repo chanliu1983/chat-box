@@ -67,6 +67,7 @@ struct ContentView: View {
     @State private var messages: [String] = []
     @State private var key: String = "TestbedKey1"
     @State private var serverType: String = "Linux"
+    @State private var isSingleRetrievalEnabled: Bool = false
 
     var body: some View {
         Picker("Platform", selection: $serverType) {
@@ -150,11 +151,14 @@ struct ContentView: View {
                         "action": "retrieve",
                         "timestamp": "\(Date())",
                         "target": "Conduit 1",
-                        "key": key
+                        "key": key,
+                        "single": isSingleRetrievalEnabled
                     ]
                     let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
                     sendAsCStructure(connection: self.connection!, textData: payload)
                 }
+                
+                Toggle("Enable Single Retrieval", isOn: $isSingleRetrievalEnabled)
             }
             
             ScrollView {
@@ -224,9 +228,8 @@ struct ContentView: View {
                 self.isConnected = true
                 self.isConnecting = false
                 self.joinConduit()
-                DispatchQueue.global(qos: .background).async {
-                    self.startReceiving(connection: connection)
-                }
+                self.startReceiving(connection: connection)
+                    
                 case .failed(_), .cancelled:
                 self.isConnected = false
                 self.isConnecting = false
