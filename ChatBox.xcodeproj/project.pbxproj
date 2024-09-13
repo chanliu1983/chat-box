@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DF545DD12C948EB7006FF500 /* ServerCommunication.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF545DD02C948EB7006FF500 /* ServerCommunication.swift */; };
 		DF9D6F222C92B69C008AC364 /* ChatBoxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9D6F212C92B69C008AC364 /* ChatBoxApp.swift */; };
 		DF9D6F242C92B69C008AC364 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9D6F232C92B69C008AC364 /* ContentView.swift */; };
 		DF9D6F262C92B69D008AC364 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF9D6F252C92B69D008AC364 /* Assets.xcassets */; };
@@ -34,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DF545DD02C948EB7006FF500 /* ServerCommunication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerCommunication.swift; sourceTree = "<group>"; };
 		DF9D6F1E2C92B69C008AC364 /* ChatBox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChatBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF9D6F212C92B69C008AC364 /* ChatBoxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBoxApp.swift; sourceTree = "<group>"; };
 		DF9D6F232C92B69C008AC364 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 		DF9D6F202C92B69C008AC364 /* ChatBox */ = {
 			isa = PBXGroup;
 			children = (
+				DF545DD02C948EB7006FF500 /* ServerCommunication.swift */,
 				DF9D6F212C92B69C008AC364 /* ChatBoxApp.swift */,
 				DF9D6F232C92B69C008AC364 /* ContentView.swift */,
 				DF9D6F252C92B69D008AC364 /* Assets.xcassets */,
@@ -263,6 +266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DF9D6F242C92B69C008AC364 /* ContentView.swift in Sources */,
+				DF545DD12C948EB7006FF500 /* ServerCommunication.swift in Sources */,
 				DF9D6F222C92B69C008AC364 /* ChatBoxApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
