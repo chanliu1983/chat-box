@@ -62,44 +62,99 @@ extension Data {
 struct ContentView: View {
     @State private var connection: NWConnection? = nil
     @State private var isConnected: Bool = false
-    @State private var message: String = ""
+    @State private var message: String = "Test Message Sent!!!"
     @State private var messages: [String] = []
+    @State private var key: String = "TestbedKey1"
 
     var body: some View {
         VStack {
             Text(isConnected ? "Connected" : "Disconnected")
                 .foregroundColor(isConnected ? .green : .red)
             
-            Button("Connect") {
-                startConnection()
+            HStack {
+                Button("Connect") {
+                    if self.isConnected {
+                        // do nothing if already connected
+                        return
+                    }
+
+                    startConnection()
+
+                    let payloadData: [String: Any] = [
+                        "message": "Conduit 1",
+                        "action": "connect",
+                        "timestamp": "\(Date())"
+                    ]
+                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                    sendAsCStructure(connection: self.connection!, textData: payload)
+                }
+                
+                Button("Disconnect") {
+                    stopConnection()
+                }
             }
             
-            Button("Conduit") {
-                let payloadData: [String: Any] = [
-                    "message": "Conduit 1",
-                    "action": "connect",
-                    "timestamp": "\(Date())"
-                ]
-                let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                sendAsCStructure(connection: self.connection!, textData: payload)
-            }
-
             TextField(
                 "Message To Send",
                 text: $message
             )
-
-            Button("Send") {
-                let payloadData: [String: Any] = [
-                    "message": message,
-                    "action": "send",
-                    "timestamp": "\(Date())",
-                    "target": "Conduit 1"
-                ]
-                let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                sendAsCStructure(connection: self.connection!, textData: payload)
+            
+            HStack {
+                Button("Send") {
+                    let payloadData: [String: Any] = [
+                        "message": message,
+                        "action": "send",
+                        "timestamp": "\(Date())",
+                        "target": "Conduit 1"
+                    ]
+                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                    sendAsCStructure(connection: self.connection!, textData: payload)
+                }
+                
+                Button("Storm") {
+                    DispatchQueue.global(qos: .background).async {
+                        for i in 0..<100 {
+                            let payloadData: [String: Any] = [
+                                "message": "Storm \(i) : \(message)",
+                                "action": "send",
+                                "timestamp": "\(Date())",
+                                "target": "Conduit 1"
+                            ]
+                            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                            sendAsCStructure(connection: self.connection!, textData: payload)
+                            Thread.sleep(forTimeInterval: 1) // Sleep for 1 second
+                        }
+                    }
+                }
             }
-
+            
+            HStack {
+                TextField("Key", text: $key)
+                Button("store") {
+                    let payloadData: [String: Any] = [
+                        "message": message,
+                        "action": "store",
+                        "timestamp": "\(Date())",
+                        "target": "Conduit 1",
+                        "key": key
+                    ]
+                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                    sendAsCStructure(connection: self.connection!, textData: payload)
+                }
+                
+                Button("retrieve") {
+                    let payloadData: [String: Any] = [
+                        "message": "",
+                        "action": "retrieve",
+                        "timestamp": "\(Date())",
+                        "target": "Conduit 1",
+                        "key": key
+                    ]
+                    let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+                    sendAsCStructure(connection: self.connection!, textData: payload)
+                }
+            }
+            
             ScrollView {
                 VStack {
                     ForEach(messages, id: \.self) { message in
@@ -107,31 +162,21 @@ struct ContentView: View {
                     }
                 }
             }
-
-            Button("Disconnect") {
-                stopConnection()
-            }
-            
-            Button("Storm") {
-                DispatchQueue.global(qos: .background).async {
-                    for i in 0..<100 {
-                        let payloadData: [String: Any] = [
-                            "message": "Storm \(i)",
-                            "action": "send",
-                            "timestamp": "\(Date())",
-                            "target": "Conduit 1"
-                        ]
-                        let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
-                        sendAsCStructure(connection: self.connection!, textData: payload)
-                        Thread.sleep(forTimeInterval: 1) // Sleep for 1 second
-                    }
-                }
-            }
-            
         }
         .padding()
         .onDisappear {
             stopConnection() // Clean up when the view disappears
+        }
+        .onAppear {
+            startConnection() // Start the connection when the view appears
+
+            let payloadData: [String: Any] = [
+                        "message": "Conduit 1",
+                        "action": "connect",
+                        "timestamp": "\(Date())"
+                    ]
+            let payload = try! JSONSerialization.data(withJSONObject: payloadData, options: [])
+            sendAsCStructure(connection: self.connection!, textData: payload)
         }
     }
     
@@ -154,8 +199,8 @@ struct ContentView: View {
     }
 
     func startConnection() {
-        let ip4 = IPv4Address("192.168.10.106")! // Linux
-        // let ip4 = IPv4Address("192.168.10.64")! // Mac
+        // let ip4 = IPv4Address("192.168.10.106")! // Linux
+        let ip4 = IPv4Address("192.168.10.64")! // Mac
         let host = NWEndpoint.Host.ipv4(ip4)
         let port = NWEndpoint.Port(rawValue: 16666)
 

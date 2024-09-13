@@ -217,6 +217,9 @@
 				Base,
 			);
 			mainGroup = DF9D6F152C92B69C008AC364;
+			packageReferences = (
+				DF9D6F4C2C92BE43008AC364 /* XCRemoteSwiftPackageReference "swift-nio" */,
+			);
 			productRefGroup = DF9D6F1F2C92B69C008AC364 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -573,6 +576,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DF9D6F4C2C92BE43008AC364 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.72.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = DF9D6F162C92B69C008AC364 /* Project object */;
 }
