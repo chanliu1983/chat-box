@@ -68,6 +68,7 @@ struct ContentView: View {
     @State private var key: String = "TestbedKey1"
     @State private var serverType: String = "Linux"
     @State private var isSingleRetrievalEnabled: Bool = false
+    @State private var isStormOngoing: Bool = false
 
     var body: some View {
         Picker("Platform", selection: $serverType) {
@@ -116,6 +117,14 @@ struct ContentView: View {
                 
                 Button("Storm") {
                     DispatchQueue.global(qos: .background).async {
+                        // Check if storm is already ongoing
+                        guard !self.isStormOngoing else {
+                            return
+                        }
+                        
+                        // Set the storm status to ongoing
+                        self.isStormOngoing = true
+                        
                         for i in 0..<100 {
                             let payloadData: [String: Any] = [
                                 "message": "Storm \(i) : \(message)",
@@ -127,8 +136,12 @@ struct ContentView: View {
                             sendAsCStructure(connection: self.connection!, textData: payload)
                             Thread.sleep(forTimeInterval: 1) // Sleep for 1 second
                         }
+                        
+                        // Set the storm status to not ongoing
+                        self.isStormOngoing = false
                     }
                 }
+                .disabled(self.isStormOngoing)
             }
             
             HStack {
