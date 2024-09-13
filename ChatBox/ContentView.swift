@@ -65,8 +65,15 @@ struct ContentView: View {
     @State private var message: String = "Test Message Sent!!!"
     @State private var messages: [String] = []
     @State private var key: String = "TestbedKey1"
+    @State private var serverType: String = "Linux"
 
     var body: some View {
+        Picker("Platform", selection: $serverType) {
+            Text("Linux").tag("Linux")
+            Text("Mac").tag("Mac")
+        }
+        .pickerStyle(SegmentedPickerStyle())
+
         VStack {
             Text(isConnected ? "Connected" : "Disconnected")
                 .foregroundColor(isConnected ? .green : .red)
@@ -200,7 +207,14 @@ struct ContentView: View {
 
     func startConnection() {
         // let ip4 = IPv4Address("192.168.10.106")! // Linux
-        let ip4 = IPv4Address("192.168.10.64")! // Mac
+        // let ip4 = IPv4Address("192.168.10.64")! // Mac
+        let ip4: IPv4Address
+        if serverType == "Linux" {
+            ip4 = IPv4Address("192.168.10.106")!
+        } else {
+            ip4 = IPv4Address("192.168.10.64")!
+        }
+
         let host = NWEndpoint.Host.ipv4(ip4)
         let port = NWEndpoint.Port(rawValue: 16666)
 
