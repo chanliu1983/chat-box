@@ -18,7 +18,14 @@ class ServerCommunicator: ObservableObject {
         let port = NWEndpoint.Port(rawValue: port)
 
         if let port = port {
-            connection = NWConnection(host: host, port: port, using: .tcp)
+            let tlsOptions = NWProtocolTLS.Options()
+            sec_protocol_options_set_verify_block(tlsOptions.securityProtocolOptions, { sec_protocol_metadata, sec_trust, sec_protocol_verify_complete in
+                // Accept self-signed certificates
+                sec_protocol_verify_complete(true)
+            }, DispatchQueue.global())
+            let parameters = NWParameters(tls: tlsOptions)
+
+            connection = NWConnection(host: host, port: port, using: parameters)
 
             connection?.stateUpdateHandler = { [weak self] newState in
                 DispatchQueue.main.async {
