@@ -5,7 +5,7 @@ struct ContentView: View {
     @State private var message: String = "Test Message Sent!!!"
     @State private var messages: [String] = []
     @State private var key: String = "TestbedKey1"
-    @State private var serverType: String = "Mac"
+    @State private var serverType: String = "Linux"
     @State private var isSingleRetrievalEnabled: Bool = false
     @State private var isStormOngoing: Bool = false
     @State private var isInConduit1: Bool = true
